@@ -1,7 +1,8 @@
 class ProductsController < JustRails::Controller
 
   def first
-    'Hello World'
+    # 'Hello World'
+    render_view :first
   end
 
 end
