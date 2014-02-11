@@ -1,4 +1,5 @@
 require 'rack'
+require 'tilt'
 
 module JustRails
   class Application
@@ -29,6 +30,20 @@ module JustRails
 
     def env
       @env
+    end
+
+    def request
+      @request = Rack::Request.new(env)
+    end
+
+    def params
+      request.params
+    end
+
+    def render_view(view_name, locals = {})
+      file = File.join(File.dirname(__FILE__), 'app','views', controller_name, "#{view_name}.html.erb")
+      tempalte = Tilt.new(file)
+      tempalte.render(self, locals.merge(:env => env))
     end
   end
 
