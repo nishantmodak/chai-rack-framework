@@ -40,10 +40,28 @@ module JustRails
       request.params
     end
 
+    def controller_name
+      JustRails.to_underscore(self.class.to_s.gsub(/Controller$/, ''))
+    end
+
     def render_view(view_name, locals = {})
       file = File.join(File.dirname(__FILE__), 'app','views', controller_name, "#{view_name}.html.erb")
       tempalte = Tilt.new(file)
       tempalte.render(self, locals.merge(:env => env))
+    end
+
+    def response(text, status = 200, headers = {})
+      fail 'Already responded' if @response
+      body = [text].flatten
+      @response = Rack::Response.new(body, status, headers)
+    end
+
+    def render(*args)
+      response(render_view(*args))
+    end
+
+    def get_response
+      @response
     end
   end
 
