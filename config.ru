@@ -1,13 +1,21 @@
 require './justrails'
 require './config/application'
 require './app/controllers/products_controller'
-require 'http_router'
 
-router = HttpRouter.new
-router.add('/hello').to(ProductsController.action(:hello))
+app = JustRailsApp::Application.new
 
-run router
+app.draw do
+  get '/' do
+    ProductsController.action(:index)
+  end
 
-map '/first' do
-  run ProductsController.action(:first)
+  get '/first' do
+    ProductsController.action(:first)
+  end
+
+  get '/hello' do
+    ProductsController.action(:hello)
+  end
 end
+
+run app

@@ -1,5 +1,7 @@
 require 'rack'
 require 'tilt'
+require 'pry'
+require 'pry-debugger'
 
 module JustRails
   class Application
@@ -7,13 +9,19 @@ module JustRails
 
       request = Rack::Request.new(env)
       
-      kontroller_class, act = parse_request(request)
-      rack_app = kontroller_class.action(act)
+      rack_app = get_rack_app(env)
       rack_app.call(env)
+      # kontroller_class, act = parse_request(request)
+      # rack_app = kontroller_class.action(act)
+      # rack_app.call(env)
       # controller = kontroller_class.new(env)
       # response = controller.send(action)
       
       # Rack::Response.new(response)
+    end
+
+    def get_rack_app(env)
+      @route_set.run_routes(env)
     end
 
     def parse_request(req)
@@ -22,6 +30,34 @@ module JustRails
       kont += 'Controller'   # ProductsController
       
       [Object.const_get(kont), action]
+    end
+
+    def draw(&block)
+      @route_set ||= RouteSet.new
+      @route_set.instance_eval(&block)
+    end
+  end
+
+  class RouteSet
+    @@routing_table = Hash.new { |verb, value| verb[value] = [] }
+
+    def get(path, &block)
+      define_route('GET', path, block)
+    end
+
+    def run_routes(env)
+      @@routing_table[env['REQUEST_METHOD']].each do |path, app|
+        if env['PATH_INFO'] == path
+          response = app.call(env)
+          return response
+        end
+      end
+    end
+
+    def define_route(verb, path, app)
+      current = @@routing_table[verb] || []
+      current += [[path, app]]
+      @@routing_table = @@routing_table.merge(verb => current)
     end
   end
 
