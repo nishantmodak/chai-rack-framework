@@ -9,4 +9,8 @@ class ProductsController < JustRails::Controller
     'This is Root'
   end
 
+  def hello
+    render :hello
+  end
+
 end
