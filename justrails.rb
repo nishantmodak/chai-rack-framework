@@ -7,11 +7,13 @@ module JustRails
 
       request = Rack::Request.new(env)
       
-      kontroller_class, action = parse_request(request)
-      controller = kontroller_class.new(env)
-      response = controller.send(action)
+      kontroller_class, act = parse_request(request)
+      rack_app = kontroller_class.action(act)
+      rack_app.call(env)
+      # controller = kontroller_class.new(env)
+      # response = controller.send(action)
       
-      Rack::Response.new(response)
+      # Rack::Response.new(response)
     end
 
     def parse_request(req)
@@ -26,6 +28,7 @@ module JustRails
   class Controller
     def initialize(env)
       @env = env
+      @routing_params = {}
     end
 
     def env
@@ -37,7 +40,22 @@ module JustRails
     end
 
     def params
-      request.params
+      request.params.merge @routing_params
+    end
+
+    def self.action(act, rparams = {})
+      proc { |e| self.new(e).dispatch(act, rparams) }
+    end
+
+    def dispatch(action, routing_params = {})
+      @routing_params = routing_params
+      text = self.send(action)
+      if get_response
+        st, hd, rs = get_response.to_a
+        [st, hd, rs]
+      else
+        [200, {'Content-Type' => 'text/html'}, [text].flatten]
+      end
     end
 
     def controller_name

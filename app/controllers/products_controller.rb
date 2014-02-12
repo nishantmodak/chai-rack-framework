@@ -5,4 +5,8 @@ class ProductsController < JustRails::Controller
     render :first
   end
 
+  def index
+    'This is Root'
+  end
+
 end
